@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Duo Concierge GPS Picker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         html, body {
@@ -32,6 +33,34 @@
             font-size: 11px;
             pointer-events: none;
             max-width: 80%;
+        }
+        /* Estilos dos Marcadores Premium importados do DuoList */
+        .restaurant-marker-pin-premium {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--marker-color), #000000 150%);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        .restaurant-marker-pin-premium i {
+            transform: rotate(45deg);
+            font-size: 13px;
+            color: #ffffff;
+        }
+        .restaurant-marker-pin-premium:hover {
+            transform: rotate(-45deg) scale(1.15);
+            box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6);
+            border-color: #fbcd4b;
+        }
+        .custom-marker-icon {
+            background: none !important;
+            border: none !important;
         }
     </style>
 </head>
@@ -94,8 +123,18 @@
                 attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
             }).addTo(map);
 
-            // Adiciona marcador arrastável
-            marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+            // Ícone premium no estilo do DuoList
+            const customIcon = L.divIcon({
+                html: `<div class="restaurant-marker-pin-premium" style="--marker-color: #fbcd4b">
+                         <i class="fa-solid fa-location-crosshairs"></i>
+                       </div>`,
+                className: 'custom-marker-icon',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32]
+            });
+
+            // Adiciona marcador arrastável com o ícone personalizado
+            marker = L.marker([lat, lon], { draggable: true, icon: customIcon }).addTo(map);
 
             // Evento ao arrastar o marcador
             marker.on('dragend', function() {
