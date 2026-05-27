@@ -9,9 +9,18 @@ from agent.agent_core import DuoConciergeAgent
 from agent.location_picker import render_gps_picker
 
 # ── Configuração da página ──────────────────────────────────
+from PIL import Image
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+favicon_path = os.path.join(current_dir, "favicon.png")
+try:
+    favicon = Image.open(favicon_path)
+except Exception:
+    favicon = "🍽️"
+
 st.set_page_config(
     page_title="Duo Concierge",
-    page_icon="🍽️",
+    page_icon=favicon,
     layout="wide"
 )
 
@@ -95,38 +104,6 @@ with st.sidebar.popover("ℹ️ Como obter sua API Key?"):
     
     👉 Veja mais no **[Guia do Gemini API](https://ai.google.dev/gemini-api/docs/quickstart?hl=pt-br)**.
     """)
-
-st.sidebar.markdown("---")
-st.sidebar.title("🧪 Simulação de Contexto")
-
-# Permite simular diferentes dias e horários para fins de teste do schedule do Duo Gourmet
-usar_data_atual = st.sidebar.checkbox(
-    "Usar data/hora atual", 
-    value=True,
-    help="Desmarque para simular outro dia/horário. Isso serve para testar a validade dos horários do Duo Gourmet em dias específicos (ex: finais de semana ou jantares de terça-feira)."
-)
-
-if not usar_data_atual:
-    dia_simulado = st.sidebar.selectbox(
-        "Dia da Semana",
-        ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
-    )
-    hora_simulada = st.sidebar.time_input("Horário da visita", datetime.time(20, 0))
-    periodo_simulado = st.sidebar.selectbox("Refeição", ["almoco", "jantar"])
-    
-    contexto_tempo = f"Hoje é {dia_simulado}, às {hora_simulada.strftime('%H:%M')}. Período: {periodo_simulado}."
-else:
-    # Mapeamento do dia da semana em português
-    dias_semana_pt = {
-        0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira",
-        3: "Quinta-feira", 4: "Sexta-feira", 5: "Sábado", 6: "Domingo"
-    }
-    agora = datetime.datetime.now()
-    dia_pt = dias_semana_pt[agora.weekday()]
-    hora_str = agora.strftime("%H:%M")
-    periodo = "almoco" if agora.hour < 17 else "jantar"
-    
-    contexto_tempo = f"Hoje é {dia_pt}, às {hora_str}. Período: {periodo}."
 
 # ── Localização do Usuário ───────────────────────────────
 st.sidebar.markdown("---")
@@ -231,7 +208,37 @@ elif modo_localizacao == "Simular Ponto de Referência":
     }
     lat_usuario, lon_usuario = coords[opcao_bairro]
     st.sidebar.caption(f"Simulando Lat: {lat_usuario} / Lon: {lon_usuario}")
+st.sidebar.markdown("---")
+st.sidebar.title("🧪 Simulação de Contexto")
 
+# Permite simular diferentes dias e horários para fins de teste do schedule do Duo Gourmet
+usar_data_atual = st.sidebar.checkbox(
+    "Usar data/hora atual", 
+    value=True,
+    help="Desmarque para simular outro dia/horário. Isso serve para testar a validade dos horários do Duo Gourmet em dias específicos (ex: finais de semana ou jantares de terça-feira)."
+)
+
+if not usar_data_atual:
+    dia_simulado = st.sidebar.selectbox(
+        "Dia da Semana",
+        ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
+    )
+    hora_simulada = st.sidebar.time_input("Horário da visita", datetime.time(20, 0))
+    periodo_simulado = st.sidebar.selectbox("Refeição", ["almoco", "jantar"])
+    
+    contexto_tempo = f"Hoje é {dia_simulado}, às {hora_simulada.strftime('%H:%M')}. Período: {periodo_simulado}."
+else:
+    # Mapeamento do dia da semana em português
+    dias_semana_pt = {
+        0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira",
+        3: "Quinta-feira", 4: "Sexta-feira", 5: "Sábado", 6: "Domingo"
+    }
+    agora = datetime.datetime.now()
+    dia_pt = dias_semana_pt[agora.weekday()]
+    hora_str = agora.strftime("%H:%M")
+    periodo = "almoco" if agora.hour < 17 else "jantar"
+    
+    contexto_tempo = f"Hoje é {dia_pt}, às {hora_str}. Período: {periodo}."
 # ── Cabeçalho principal com Branding do DuoList ──────────────
 st.markdown("""
     <div style="display: flex; align-items: center; gap: 12px; margin-top: -20px; margin-bottom: 5px;">
