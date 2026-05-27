@@ -23,7 +23,7 @@ class DuoConciergeAgent:
         }
         self.tools_list = list(self.tools_map.values())
 
-    def run(self, user_input: str, time_context: str, history: list = None) -> tuple[str, list[dict], list]:
+    def run(self, user_input: str, time_context: str, lat_usuario: float = None, lon_usuario: float = None, history: list = None) -> tuple[str, list[dict], list]:
         """
         Executa o loop ReAct chamando o Gemini e processando as function calls
         até devolver a resposta textual final, mantendo o histórico de chat.
@@ -31,11 +31,15 @@ class DuoConciergeAgent:
         if history is None:
             history = []
             
+        system_metadata = f"Contexto do Sistema (invisível p/ usuário): {time_context}"
+        if lat_usuario is not None and lon_usuario is not None:
+            system_metadata += f"\nLocalização atual do usuário (GPS): lat={lat_usuario}, lon={lon_usuario}"
+            
         history.append(
             types.Content(
                 role="user",
                 parts=[
-                    types.Part.from_text(text=f"Contexto do Sistema (invisível p/ usuário): {time_context}\n\nEntrada do Usuário: {user_input}")
+                    types.Part.from_text(text=f"{system_metadata}\n\nEntrada do Usuário: {user_input}")
                 ]
             )
         )

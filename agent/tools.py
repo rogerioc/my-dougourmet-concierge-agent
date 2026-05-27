@@ -59,8 +59,8 @@ def buscar_restaurantes(bairro: str = None, cozinha: str = None, lat_usuario: fl
             continue
             
         # Calcular distância se GPS fornecido
-        r_lat = r.get("google_lat")
-        r_lon = r.get("google_lng")
+        r_lat = r.get("lat") or r.get("google_lat")
+        r_lon = r.get("lon") or r.get("google_lng")
         
         distancia = float('inf')
         if lat_usuario and lon_usuario and r_lat and r_lon:

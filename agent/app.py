@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 import datetime
-from agent.agent import DuoConciergeAgent
+from agent.agent_core import DuoConciergeAgent
 from agent.location_picker import render_gps_picker
 
 # ── Configuração da página ──────────────────────────────────
@@ -218,15 +218,12 @@ if user_input := st.chat_input("Ex: Quero comer comida italiana hoje à noite �
             with st.spinner("🤖 Procurando o melhor restaurante para você..."):
                 agent = DuoConciergeAgent(api_key=api_key)
                 
-                # Incorpora as coordenadas de localização se ativado
-                prompt_completo = user_input
-                if lat_usuario and lon_usuario:
-                    prompt_completo += f" (Minhas coordenadas base de cálculo: lat={lat_usuario}, lon={lon_usuario})"
-                    
                 response, intermediate_steps, st.session_state.chat_history = agent.run(
-                    prompt_completo, 
-                    contexto_tempo, 
-                    st.session_state.chat_history
+                    user_input=user_input, 
+                    time_context=contexto_tempo, 
+                    lat_usuario=lat_usuario,
+                    lon_usuario=lon_usuario,
+                    history=st.session_state.chat_history
                 )
 
             # Expanders dos passos intermediários
