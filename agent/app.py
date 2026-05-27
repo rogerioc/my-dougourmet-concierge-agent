@@ -5,8 +5,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 import datetime
+from zoneinfo import ZoneInfo
 from agent.agent_core import DuoConciergeAgent
-from agent.location_picker import render_gps_picker
+from agent.location_picker import render_gps_picker, render_timezone_detector
 
 # ── Configuração da página ──────────────────────────────────
 from PIL import Image
@@ -44,6 +45,13 @@ if "gps_prompt_shown" not in st.session_state:
     st.session_state.gps_prompt_shown = False
 if "gps_active_toast_shown" not in st.session_state:
     st.session_state.gps_active_toast_shown = False
+if "browser_timezone" not in st.session_state:
+    st.session_state.browser_timezone = "America/Sao_Paulo"
+
+# Detecta silenciosamente a timezone do navegador do usuário
+detected_tz = render_timezone_detector(key="tz_detector")
+if detected_tz:
+    st.session_state.browser_timezone = detected_tz
 
 # ── Custom CSS para alinhar tipografia e marca com DuoList ───
 st.markdown("""
@@ -242,7 +250,12 @@ else:
         0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira",
         3: "Quinta-feira", 4: "Sexta-feira", 5: "Sábado", 6: "Domingo"
     }
-    agora = datetime.datetime.now()
+    tz_name = st.session_state.get("browser_timezone", "America/Sao_Paulo")
+    try:
+        tz = ZoneInfo(tz_name)
+    except Exception:
+        tz = ZoneInfo("America/Sao_Paulo")
+    agora = datetime.datetime.now(tz)
     dia_pt = dias_semana_pt[agora.weekday()]
     hora_str = agora.strftime("%H:%M")
     periodo = "almoco" if agora.hour < 17 else "jantar"

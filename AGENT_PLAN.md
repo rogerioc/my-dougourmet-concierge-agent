@@ -45,8 +45,9 @@ MyDuoConcierge/
 │   ├── tools.py              # Search functions on the JSON database
 │   ├── prompts.py            # System prompt / instructions
 │   ├── utils.py              # Helpers (weekday, current time)
-│   ├── location_picker.py    # Custom GPS picker component wrapper
-│   └── gps_component/        # Folder containing the Leaflet map index.html
+│   ├── location_picker.py    # Custom GPS picker and timezone component wrapper
+│   ├── gps_component/        # Folder containing the Leaflet map index.html
+│   └── timezone_component/   # Folder containing the browser timezone detection HTML
 └── requirements.txt
 ```
 
@@ -251,3 +252,9 @@ To allow the agent to calculate precise distances based on the user's current lo
 - [x] Add UI toast notifications suggesting GPS activation and confirming lock
 - [x] Sync geolocation marker aesthetics with premium pins (gold teardrop + FontAwesome)
 - [x] Update Streamlit page icon (favicon) to match DuoList
+
+**Mapping Links & Browser Timezone (Phase 6)**
+- [x] Extract `slug` directly in backend search tools to prevent LLM link generation errors
+- [x] Update prompt guidelines to format Google Maps URLs with search queries and prioritize DuoList map links
+- [x] Add dynamic browser timezone detection via silent custom JS/HTML5 iframe component
+

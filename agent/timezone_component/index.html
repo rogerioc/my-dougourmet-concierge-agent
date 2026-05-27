@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+</head>
+<body style="margin: 0; padding: 0; background: transparent;">
+    <script>
+        function sendTimezone() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                window.parent.postMessage({
+                    isStreamlitMessage: true,
+                    type: "streamlit:setComponentValue",
+                    value: tz
+                }, "*");
+            } catch (e) {
+                console.error("Erro ao obter timezone:", e);
+            }
+        }
+        
+        // Avisa ao Streamlit que o componente está pronto
+        window.parent.postMessage({
+            isStreamlitMessage: true,
+            apiVersion: 1,
+            type: "streamlit:componentReady"
+        }, "*");
+        
+        // Escuta os eventos de renderização do Streamlit
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "streamlit:render") {
+                // Ajusta a altura para 0 para tornar o iframe invisível
+                window.parent.postMessage({
+                    isStreamlitMessage: true,
+                    type: "streamlit:setFrameHeight",
+                    height: 0
+                }, "*");
+                sendTimezone();
+            }
+        });
+    </script>
+</body>
+</html>
