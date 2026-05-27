@@ -23,19 +23,22 @@ class DuoConciergeAgent:
         }
         self.tools_list = list(self.tools_map.values())
 
-    def run(self, user_input: str, time_context: str) -> tuple[str, list[dict]]:
+    def run(self, user_input: str, time_context: str, history: list = None) -> tuple[str, list[dict], list]:
         """
         Executa o loop ReAct chamando o Gemini e processando as function calls
-        até devolver a resposta textual final.
+        até devolver a resposta textual final, mantendo o histórico de chat.
         """
-        contents = [
+        if history is None:
+            history = []
+            
+        history.append(
             types.Content(
                 role="user",
                 parts=[
                     types.Part.from_text(text=f"Contexto do Sistema (invisível p/ usuário): {time_context}\n\nEntrada do Usuário: {user_input}")
                 ]
             )
-        ]
+        )
         
         intermediate_steps = []
         max_turns = 8
@@ -43,7 +46,7 @@ class DuoConciergeAgent:
         for _ in range(max_turns):
             response = self.client.models.generate_content(
                 model=self.model,
-                contents=contents,
+                contents=history,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt_text,
                     tools=self.tools_list,
@@ -52,8 +55,8 @@ class DuoConciergeAgent:
             )
             
             if response.function_calls:
-                # Gemini exigem que o histórico de function calls geradas seja adicionado como role 'model'
-                contents.append(response.candidates[0].content)
+                # Gemini exige que o histórico de function calls geradas seja adicionado como role 'model'
+                history.append(response.candidates[0].content)
                 
                 tool_responses = []
                 for call in response.function_calls:
@@ -82,7 +85,7 @@ class DuoConciergeAgent:
                     )
                 
                 # As respostas das funções entram no histórico como role 'user' no padrão GenAI SDK
-                contents.append(
+                history.append(
                     types.Content(
                         role="user",
                         parts=tool_responses
@@ -90,6 +93,11 @@ class DuoConciergeAgent:
                 )
                 continue
             else:
-                return response.text, intermediate_steps
+                # Salva a resposta final do modelo no histórico
+                if response.candidates and response.candidates[0].content:
+                    history.append(response.candidates[0].content)
+                return response.text, intermediate_steps, history
+                
+        return "Desculpe, precisei interromper a busca pois demorou demais para encontrar algo. Tente ser mais específico!", intermediate_steps, history
                 
         return "Desculpe, precisei interromper a busca pois demorou demais para encontrar algo. Tente ser mais específico!", intermediate_steps

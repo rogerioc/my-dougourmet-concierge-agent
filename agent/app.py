@@ -1,6 +1,12 @@
+import sys
+import os
+# Garante que a raiz do MyDuoConcierge está no PYTHONPATH
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import streamlit as st
 import datetime
 from agent.agent import DuoConciergeAgent
+from agent.location_picker import render_gps_picker
 
 # ── Configuração da página ──────────────────────────────────
 st.set_page_config(
@@ -14,6 +20,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "steps" not in st.session_state:
     st.session_state.steps = {}
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # ── Custom CSS para alinhar tipografia e marca com DuoList ───
 st.markdown("""
@@ -30,14 +38,49 @@ st.markdown("""
             border-color: #fbcd4b !important;
             box-shadow: 0 0 0 3px rgba(251, 205, 75, 0.15) !important;
         }
+        /* Esconde footer padrão do Streamlit */
+        footer {
+            visibility: hidden;
+            display: none !important;
+        }
+        /* Ajusta o input do chat para subir e dar espaço ao footer */
+        div[data-testid="stChatInput"] {
+            bottom: 30px !important;
+        }
+        /* Estilo do footer fixo abaixo do input */
+        .custom-footer {
+            position: fixed;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            z-index: 999999;
+            background: transparent;
+        }
     </style>
 """, unsafe_allow_html=True)
+st.sidebar.title("ℹ️ Sobre o Duo Gourmet")
+st.sidebar.markdown("""
+O **Duo Gourmet** é um benefício que permite pedir um prato
+principal e ganhar outro de igual ou menor valor.
 
+Use este assistente para encontrar o restaurante ideal.
+""")
+
+if st.sidebar.button("🔄 Nova Conversa"):
+    st.session_state.messages = []
+    st.session_state.steps = {}
+    st.session_state.chat_history = []
+    st.rerun()
+
+st.sidebar.markdown("---")
 # ── Sidebar ─────────────────────────────────────────────────
 api_key = st.sidebar.text_input("🔑 Gemini API Key", type="password")
 
-if not api_key:
-    st.sidebar.info("""
+with st.sidebar.popover("ℹ️ Como obter sua API Key?"):
+    st.markdown("""
     💡 **O que é a API do Gemini?**
     É a interface que conecta este assistente à IA do Google, permitindo analisar restaurantes de forma personalizada.
     
@@ -53,7 +96,11 @@ st.sidebar.markdown("---")
 st.sidebar.title("🧪 Simulação de Contexto")
 
 # Permite simular diferentes dias e horários para fins de teste do schedule do Duo Gourmet
-usar_data_atual = st.sidebar.checkbox("Usar data/hora atual", value=True)
+usar_data_atual = st.sidebar.checkbox(
+    "Usar data/hora atual", 
+    value=True,
+    help="Desmarque para simular outro dia/horário. Isso serve para testar a validade dos horários do Duo Gourmet em dias específicos (ex: finais de semana ou jantares de terça-feira)."
+)
 
 if not usar_data_atual:
     dia_simulado = st.sidebar.selectbox(
@@ -77,17 +124,33 @@ else:
     
     contexto_tempo = f"Hoje é {dia_pt}, às {hora_str}. Período: {periodo}."
 
-# Simulação de localização do usuário
+# ── Localização do Usuário ───────────────────────────────
 st.sidebar.markdown("---")
-st.sidebar.title("📍 Localização Simulada")
-usa_localizacao = st.sidebar.checkbox("Simular Localização (GPS)", value=False)
+st.sidebar.title("📍 Localização do Usuário")
+
+modo_localizacao = st.sidebar.radio(
+    "Como definir sua posição?",
+    ["Desativada", "Usar GPS do Navegador (Leaflet)", "Simular Ponto de Referência"],
+    help="O agente usará sua localização para calcular a distância física em KM de cada restaurante e priorizar os mais próximos."
+)
+
 lat_usuario = None
 lon_usuario = None
-
 opcao_bairro = None
-if usa_localizacao:
+
+if modo_localizacao == "Usar GPS do Navegador (Leaflet)":
+    st.sidebar.caption("Permita o acesso ao GPS na janela do mapa abaixo:")
+    gps_data = render_gps_picker(key="main_gps_picker")
+    if gps_data:
+        lat_usuario = gps_data.get("lat")
+        lon_usuario = gps_data.get("lon")
+        st.sidebar.success(f"GPS Ativo: {lat_usuario:.4f}, {lon_usuario:.4f}")
+    else:
+        st.sidebar.info("Aguardando coordenadas do GPS...")
+        
+elif modo_localizacao == "Simular Ponto de Referência":
     opcao_bairro = st.sidebar.selectbox(
-        "Selecione um ponto de referência em BH",
+        "Selecione um ponto em BH",
         [
             "Savassi (Praça Diogo de Vasconcelos)",
             "Lourdes (Praça Marília de Dirceu)",
@@ -96,7 +159,6 @@ if usa_localizacao:
             "Pampulha (Igrejinha)"
         ]
     )
-    
     coords = {
         "Savassi (Praça Diogo de Vasconcelos)": (-19.9386, -43.9359),
         "Lourdes (Praça Marília de Dirceu)": (-19.9348, -43.9455),
@@ -105,21 +167,7 @@ if usa_localizacao:
         "Pampulha (Igrejinha)": (-19.8519, -43.9793)
     }
     lat_usuario, lon_usuario = coords[opcao_bairro]
-    st.sidebar.caption(f"Lat: {lat_usuario} / Lon: {lon_usuario}")
-
-st.sidebar.markdown("---")
-st.sidebar.title("ℹ️ Sobre o Duo Gourmet")
-st.sidebar.markdown("""
-O **Duo Gourmet** é um benefício que permite pedir um prato
-principal e ganhar outro de igual ou menor valor.
-
-Use este assistente para encontrar o restaurante ideal.
-""")
-
-if st.sidebar.button("🔄 Nova Conversa"):
-    st.session_state.messages = []
-    st.session_state.steps = {}
-    st.rerun()
+    st.sidebar.caption(f"Simulando Lat: {lat_usuario} / Lon: {lon_usuario}")
 
 # ── Cabeçalho principal com Branding do DuoList ──────────────
 st.markdown("""
@@ -135,7 +183,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Exibe contexto de simulação ativo
-st.info(f"⚙️ **Contexto Ativo:** {contexto_tempo}" + (f" | 📍 Proximidade ligada: {opcao_bairro}" if usa_localizacao else ""))
+localizacao_texto = ""
+if lat_usuario and lon_usuario:
+    localizacao_texto = f" | 📍 Localização: {opcao_bairro or 'GPS do Navegador'} ({lat_usuario:.4f}, {lon_usuario:.4f})"
+st.info(f"⚙️ **Contexto Ativo:** {contexto_tempo}{localizacao_texto}")
 
 # ── Exibe histórico de mensagens ─────────────────────────────
 avatars = {"human": "user", "ai": "assistant"}
@@ -163,25 +214,52 @@ if user_input := st.chat_input("Ex: Quero comer comida italiana hoje à noite �
 
     # Executa o agente e captura steps intermediários
     with st.chat_message("assistant"):
-        with st.spinner("🤖 Procurando o melhor restaurante para você..."):
-            agent = DuoConciergeAgent(api_key=api_key)
-            
-            # Incorpora as coordenadas de localização se ativado
-            prompt_completo = user_input
-            if lat_usuario and lon_usuario:
-                prompt_completo += f" (Minhas coordenadas base de cálculo: lat={lat_usuario}, lon={lon_usuario})"
+        try:
+            with st.spinner("🤖 Procurando o melhor restaurante para você..."):
+                agent = DuoConciergeAgent(api_key=api_key)
                 
-            response, intermediate_steps = agent.run(prompt_completo, contexto_tempo)
+                # Incorpora as coordenadas de localização se ativado
+                prompt_completo = user_input
+                if lat_usuario and lon_usuario:
+                    prompt_completo += f" (Minhas coordenadas base de cálculo: lat={lat_usuario}, lon={lon_usuario})"
+                    
+                response, intermediate_steps, st.session_state.chat_history = agent.run(
+                    prompt_completo, 
+                    contexto_tempo, 
+                    st.session_state.chat_history
+                )
 
-        # Expanders dos passos intermediários
-        for step in intermediate_steps:
-            with st.expander(f"⚙️ **Ferramenta executada:** `{step['tool']}`"):
-                st.write("**Parâmetros:**", step['args'])
-                st.write("**Resultado retornado:**", step['result'])
+            # Expanders dos passos intermediários
+            for step in intermediate_steps:
+                with st.expander(f"⚙️ **Ferramenta executada:** `{step['tool']}`"):
+                    st.write("**Parâmetros:**", step['args'])
+                    st.write("**Resultado retornado:**", step['result'])
 
-        st.markdown(response)
+            st.markdown(response)
 
-    # Salva no histórico
-    idx = len(st.session_state.messages) - 1
-    st.session_state.messages.append({"role": "ai", "content": response})
-    st.session_state.steps[str(idx + 1)] = intermediate_steps
+            # Salva no histórico apenas em caso de sucesso
+            idx = len(st.session_state.messages) - 1
+            st.session_state.messages.append({"role": "ai", "content": response})
+            st.session_state.steps[str(idx + 1)] = intermediate_steps
+
+        except Exception as e:
+            err_msg = str(e)
+            # Remove a última mensagem enviada pelo usuário para não quebrar a UI
+            if st.session_state.messages:
+                st.session_state.messages.pop()
+                
+            if "API_KEY_INVALID" in err_msg or "INVALID_ARGUMENT" in err_msg or "400" in err_msg:
+                st.error("🔑 **API Key Inválida!** A chave que você inseriu na barra lateral não é válida ou está inativa. Verifique se copiou a chave correta no [Google AI Studio](https://aistudio.google.com/).")
+            else:
+                st.error(f"⚠️ **Erro no Gemini:** Não foi possível processar sua mensagem. Detalhes: `{err_msg}`")
+
+# ── Footer da Tela Principal ────────────────────────────────
+st.markdown(
+    """
+    <div class="custom-footer">
+        Created By <a href="https://rogerioc.github.io/about/" target="_blank" style="color: #fbcd4b; text-decoration: none; font-weight: 600;">Rogerio C.S</a> | 
+        Dados extraídos de <a href="https://www.duogourmet.com.br" target="_blank" style="color: #fbcd4b; text-decoration: none;">Duo Gourmet</a> &copy;
+    </div>
+    """,
+    unsafe_allow_html=True
+)
