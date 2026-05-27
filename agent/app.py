@@ -145,8 +145,55 @@ opcao_bairro = None
 if modo_localizacao == "Desativada":
     st.session_state.gps_active_toast_shown = False
     if not st.session_state.gps_prompt_shown:
-        st.toast("🧭 Dica: Ative a geolocalização na barra lateral para calcular distâncias e ver restaurantes mais próximos!", icon="💡")
-        st.session_state.gps_prompt_shown = True
+        with st.container(border=True):
+            st.markdown("""
+                <style>
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.gps-popup-class) {
+                        position: fixed !important;
+                        bottom: 80px !important;
+                        left: 24px !important;
+                        width: 320px !important;
+                        background-color: #1e293b !important;
+                        border: 1px solid rgba(251, 205, 75, 0.6) !important;
+                        border-radius: 12px !important;
+                        padding: 16px !important;
+                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+                        z-index: 999999 !important;
+                    }
+                    .gps-popup-class {
+                        color: #f8fafc;
+                        font-family: 'Outfit', sans-serif;
+                        font-size: 13.5px;
+                        line-height: 1.5;
+                        margin-bottom: 12px;
+                    }
+                    .gps-popup-title {
+                        font-weight: 700;
+                        color: #fbcd4b;
+                        margin-bottom: 6px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.gps-popup-class) button {
+                        background-color: #fbcd4b !important;
+                        color: #0f172a !important;
+                        border: none !important;
+                        font-weight: 600 !important;
+                    }
+                    div[data-testid="stVerticalBlockBorderWrapper"]:has(.gps-popup-class) button:hover {
+                        background-color: #fbd668 !important;
+                        color: #0f172a !important;
+                    }
+                </style>
+                <div class="gps-popup-class">
+                    <div class="gps-popup-title">🧭 Ative seu GPS</div>
+                    Para uma melhor experiência, ative a geolocalização na barra lateral. Isso permite calcular a distância e ver os restaurantes mais próximos!
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("Entendi", key="close_gps_popup", use_container_width=True):
+                st.session_state.gps_prompt_shown = True
+                st.rerun()
 
 elif modo_localizacao == "Usar GPS do Navegador (Leaflet)":
     st.session_state.gps_prompt_shown = False
