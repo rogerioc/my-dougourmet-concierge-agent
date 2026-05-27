@@ -76,7 +76,7 @@ st.markdown("""
             left: 0;
             right: 0;
             text-align: center;
-            font-size: 11px;
+            font-size: 16px;
             color: #64748b;
             z-index: 999999;
             background: transparent;
@@ -334,6 +334,7 @@ st.markdown(
     """
     <div class="custom-footer">
         Created By <a href="https://rogerioc.github.io/about/" target="_blank" style="color: #fbcd4b; text-decoration: none; font-weight: 600;">Rogerio C.S</a> | 
+        <a href="https://github.com/rogerioc/my-dougourmet-concierge-agent" target="_blank" style="color: #fbcd4b; text-decoration: none; font-weight: 600;">GitHub Repo</a> | 
         Dados extraídos de <a href="https://www.duogourmet.com.br" target="_blank" style="color: #fbcd4b; text-decoration: none;">Duo Gourmet</a> &copy;
     </div>
     """,
