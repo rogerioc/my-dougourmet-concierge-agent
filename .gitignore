@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit configurations
+.streamlit/
+
+# OS generated files
+.DS_Store
+
+# Environments
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# Local data files (if you want to keep data separate or large files ignored)
+# restaurantes_bh.json

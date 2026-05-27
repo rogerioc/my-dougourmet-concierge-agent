@@ -15,7 +15,7 @@ Você precisará de uma **API Key do Gemini**. Você pode obtê-la gratuitamente
 ## 📁 Estrutura de Arquivos
 - `restaurantes_bh.json` - A base de dados do DuoList.
 - `agent/app.py` - Interface visual usando Streamlit.
-- `agent/agent.py` - Lógica de inicialização do agente, prompts e comunicação com a Google GenAI SDK.
+- `agent/agent_core.py` - Lógica de inicialização do agente, prompts e comunicação com a Google GenAI SDK.
 - `agent/tools.py` - As ferramentas chamadas pelo agente (Filtro espacial por Haversine, checagem do schedule, leitura do banco).
 - `agent/prompts.py` - Prompt base que direciona o comportamento e persona do modelo.
 - `agent/utils.py` - Normalizadores de texto e manipuladores de data/hora.

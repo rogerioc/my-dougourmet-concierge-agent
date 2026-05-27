@@ -11,6 +11,7 @@ from agent.prompts import system_prompt_text
 
 class DuoConciergeAgent:
     def __init__(self, api_key: str):
+        
         self.client = genai.Client(api_key=api_key)
         # Utilizando o flash, pois é mais rápido e o 2.5 traz melhor reasoning
         self.model = "gemini-2.5-flash"
