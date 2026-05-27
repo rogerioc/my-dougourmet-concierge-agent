@@ -4,6 +4,8 @@ This is **Duo Concierge**, an AI agent specialized in the Duo Gourmet program in
 
 Built on top of the **DuoList BH** interactive map ([Live Map](https://rogerioc.github.io/my-duogourmet-map/) | [GitHub Repo](https://github.com/rogerioc/my-duogourmet-map)), this agent utilizes the Google Gemini API to help you decide where to use your benefit based on simulated context, time, and location.
 
+🤖 **AI-Built Project**: This entire project was developed and orchestrated by **Google Antigravity** (Google DeepMind's agentic coding AI assistant) based on a structured roadmap. The detailed execution plan followed during construction can be found in the [AGENT_PLAN.md](AGENT_PLAN.md) file.
+
 ## 🌐 Live Demo
 
 You can access the live application here:
